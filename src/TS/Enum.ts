@@ -13,7 +13,3 @@ export interface NewTodo {
   title: string;
   description?: string;
 }
-
-// export interface CreatTodo {
-
-// }
