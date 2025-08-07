@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/src/style.css" />
+    <title>BT5 Monstarlab</title>
+  </head>
+  <body>
+    <div class="container">
+      <form id="todo-form" class="formContainer">
+        <h1 class="title">Todo List</h1>
+        <input type="text" id="todo-title" class="input" placeholder="Tiêu đề công việc" />
+        <textarea id="todo-description" class="input" placeholder="Mô tả"></textarea>
+        <button type="submit" class="addButton">Thêm mới</button>
+      </form>
+      <div class="advanceContainer"></div>
+      <div>
+        <table id="todo-list" class="todoTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tiêu đề</th>
+              <th>Mô tả</th>
+              <th>Trạng thái</th>
+              <th>Ngày tạo</th>
+              <th>Ngày cập nhật</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
