@@ -1,4 +1,5 @@
 import type { Todo } from '../TS/Enum';
+import { formatDate } from './Utils';
 
 export const renderDisplayTodos = (todos: Todo[], container: HTMLElement) => {
   if (!container) return;
@@ -11,10 +12,6 @@ export const renderDisplayTodos = (todos: Todo[], container: HTMLElement) => {
     container.appendChild(noTodoRow);
     return;
   }
-
-  const formatDate = (date: Date): string => {
-    return new Date(date).toLocaleString();
-  };
 
   todos.forEach((todo, index) => {
     const row = document.createElement('tr');

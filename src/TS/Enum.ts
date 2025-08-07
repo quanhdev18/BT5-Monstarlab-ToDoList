@@ -9,7 +9,4 @@ export interface Todo {
   updatedAt: Date;
 }
 
-export interface NewTodo {
-  title: string;
-  description?: string;
-}
+export type NewTodo = Pick<Todo, 'title' | 'description'>;
