@@ -1,13 +1,32 @@
 import type { Todo } from '../TS/Enum';
+import { API_URL } from './ApiUrl';
 
-const API_URL = 'https://68a5335b2a3deed2960cac09.mockapi.io/tasks';
+export const fetchTodos = async (
+  page: number,
+  limit: number,
+  searchTerm: string,
+  filterStatus: string
+) => {
+  const params = new URLSearchParams();
+  params.append('page', page.toString());
+  params.append('limit', limit.toString());
 
-export const fetchTodos = async (page: number, limit: number): Promise<Todo[]> => {
-  const url = `${API_URL}?page=${page}&limit=${limit}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error('Lỗi Api!');
+  if (searchTerm) {
+    params.append('search', searchTerm);
   }
+
+  if (filterStatus && filterStatus !== 'all') {
+    params.append('status', filterStatus);
+  }
+
+  const url = `${API_URL}?${params.toString()}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    console.error('Lỗi khi lấy danh sách.', response.statusText);
+    return [];
+  }
+
   const data: Todo[] = await response.json();
   return data;
 };

@@ -6,7 +6,7 @@ export const renderDisplayTodos = (todos: Todo[], container: HTMLElement) => {
 
   container.innerHTML = '';
 
-  if (todos.length === 0) {
+  if (!todos) {
     const noTodoRow = document.createElement('tr');
     noTodoRow.innerHTML = `<td colspan="6" class="no-todos-text">Chưa có công việc nào!</td>`;
     container.appendChild(noTodoRow);
