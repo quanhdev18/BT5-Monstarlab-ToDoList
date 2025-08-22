@@ -124,3 +124,8 @@ body {
   margin-top: 1rem;
   gap: 0.5rem;
 }
+
+
+.edit-button {
+  width: 80px;
+}
