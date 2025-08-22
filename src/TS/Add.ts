@@ -1,8 +1,8 @@
-import type { NewTodo, Todo } from '../TS/Enum';
+import type { NewTodo } from '../TS/Enum';
+import { API_URL } from './ApiUrl';
 
-const API_URL = 'https://68a5335b2a3deed2960cac09.mockapi.io/tasks';
-
-export const handleAddTodo = async (newTodoData: NewTodo): Promise<Todo> => {
+export const handleAddTodo = async (newTodoData: NewTodo) => {
+  const now = new Date().getTime();
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
@@ -11,13 +11,13 @@ export const handleAddTodo = async (newTodoData: NewTodo): Promise<Todo> => {
     body: JSON.stringify({
       ...newTodoData,
       status: 'todo',
+      createdAt: now,
+      updatedAt: now,
     }),
   });
 
   if (!response.ok) {
     throw new Error('Lỗi khi thêm công việc mới!');
   }
-
-  const newTodo: Todo = await response.json();
-  return newTodo;
 };
+

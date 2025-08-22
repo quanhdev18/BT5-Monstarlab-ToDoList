@@ -3,7 +3,7 @@ import { getTrimedValue } from './TS/Utils';
 import type { Todo, NewTodo } from './TS/Enum';
 import { fetchTodos } from './TS/Api';
 import { handleAddTodo } from './TS/Add';
-import { filterAndSearchTodos } from './TS/FilterAndSearch';
+import { handleEditTodo, handleDeleteTodo } from './TS/EditAndDelete';
 
 const main = () => {
   const todoForm = document.getElementById('todo-form') as HTMLFormElement;
@@ -17,45 +17,51 @@ const main = () => {
   const nextButton = document.getElementById('next-page') as HTMLButtonElement;
   const pageText = document.getElementById('current-page-text') as HTMLSpanElement;
 
-  // let todos: Todo[] = [];
-  let allTodos: Todo[] = [];
+  let todos: Todo[] = [];
+  let editingTodo: Todo | null = null;
 
   let currentPage = 1;
-  const ITEMS_PAGE = 20;
+  const ITEMS_PER_PAGE = 20;
 
   const updatePaginationButtons = (dataLength: number) => {
-    if (prevButton) {
+    if (prevButton && nextButton && pageText) {
       prevButton.disabled = currentPage === 1;
-    }
-    if (nextButton) {
-      nextButton.disabled = dataLength < ITEMS_PAGE;
-    }
-    if (pageText) {
+      nextButton.disabled = dataLength < ITEMS_PER_PAGE;
       pageText.textContent = `Trang ${currentPage}`;
     }
   };
 
-  const updateDisplay = () => {
-    const searchTerm = searchInput.value;
-    const filterStatus = statusFilter.value;
-    const filteredTodos = filterAndSearchTodos(allTodos, searchTerm, filterStatus);
+  const updateDisplay = async () => {
+    try {
+      const searchTerm = searchInput.value;
+      const filterStatus = statusFilter.value;
 
-    const startIndex = (currentPage - 1) * ITEMS_PAGE;
-    const paginatedTodos = filteredTodos.slice(startIndex, startIndex + ITEMS_PAGE);
+      todos = await fetchTodos(currentPage, ITEMS_PER_PAGE, searchTerm, filterStatus);
 
-    renderDisplayTodos(paginatedTodos, todoListContainer);
-    updatePaginationButtons(paginatedTodos.length);
+      renderDisplayTodos(todos, todoListContainer);
+      updatePaginationButtons(todos.length);
+    } catch (error) {
+      console.error('Lỗi khi cập nhật hiển thị:', error);
+      alert('Không thể cập nhật danh sách.');
+    }
   };
 
   const initializeApp = async () => {
     try {
-      allTodos = await fetchTodos(1, 100);
-
-      updateDisplay();
+      await updateDisplay();
     } catch (error) {
       console.error('Lỗi khi tải dữ liệu từ API:', error);
       alert('Không thể tải dữ liệu.');
     }
+  };
+
+  const cleanForm = () => {
+    todoTitleInput.value = '';
+    todoDescriptionInput.value = '';
+    if (todoForm.querySelector('button')) {
+      (todoForm.querySelector('button') as HTMLButtonElement).textContent = 'Thêm mới';
+    }
+    editingTodo = null;
   };
 
   const handleFormSubmit = async (event: Event) => {
@@ -63,20 +69,58 @@ const main = () => {
     const title = getTrimedValue(todoTitleInput?.value);
     const description = getTrimedValue(todoDescriptionInput?.value);
     if (title) {
-      const newTodoData: NewTodo = {
-        title,
-        description,
-      };
       try {
-        const newTodo = await handleAddTodo(newTodoData);
-        allTodos.push(newTodo);
+        if (editingTodo) {
+          const updatedTodo = {
+            ...editingTodo,
+            title: title,
+            description: description,
+            updatedAt: new Date().getTime(),
+          };
+          await handleEditTodo(updatedTodo);
+        } else {
+          const newTodoData: NewTodo = {
+            title,
+            description,
+          };
+          await handleAddTodo(newTodoData);
+        }
+
         currentPage = 1;
-        updateDisplay();
-        todoTitleInput.value = '';
-        todoDescriptionInput.value = '';
+        await updateDisplay();
+        cleanForm();
       } catch (error) {
         console.error('Lỗi khi thêm công việc mới:', error);
         alert('Không thể thêm công việc mới.');
+      }
+    }
+  };
+
+  const handleTodoListClick = async (event: Event) => {
+    const target = event.target as HTMLElement;
+    const row = target.closest('tr');
+    if (!row) return;
+
+    const todoId = row.dataset.id;
+    if (!todoId) return;
+
+    if (target.classList.contains('delete-button')) {
+      if (confirm('Bạn có chắc chắn muốn xóa công việc này?')) {
+        try {
+          await handleDeleteTodo(todoId);
+          await updateDisplay();
+        } catch (error) {
+          console.error('Lỗi khi xóa công việc:', error);
+          alert('Không thể xóa công việc.');
+        }
+      }
+    } else if (target.classList.contains('edit-button')) {
+      const todoToEdit = todos.find((t) => t.id === todoId);
+      if (todoToEdit) {
+        editingTodo = todoToEdit;
+        todoTitleInput.value = editingTodo.title;
+        todoDescriptionInput.value = editingTodo.description || '';
+        (todoForm.querySelector('button') as HTMLButtonElement).textContent = 'Cập nhật';
       }
     }
   };
@@ -85,6 +129,10 @@ const main = () => {
     todoForm.addEventListener('submit', handleFormSubmit);
   }
   document.addEventListener('DOMContentLoaded', initializeApp);
+
+  if (todoListContainer) {
+    todoListContainer.addEventListener('click', handleTodoListClick);
+  }
 
   if (searchButton) {
     searchButton.addEventListener('click', () => {
@@ -101,7 +149,6 @@ const main = () => {
       }
     });
   }
-
   if (nextButton) {
     nextButton.addEventListener('click', () => {
       currentPage++;
